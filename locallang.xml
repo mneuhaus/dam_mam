@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<description></description>
+		<csh_table></csh_table>
+		<fileId>EXT:dam_mam/locallang.xml</fileId>
+		<labelContext type="array">
+			<label index="Sync.name"></label>
+			<label index="Sync.description"></label>
+			<label index="mam_properties"></label>
+		</labelContext>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="Sync.name">Sync</label>
+			<label index="Sync.description"></label>
+			<label index="mam_properties">MAM Properties</label>
+		</languageKey>
+	</data>
+</T3locallang>

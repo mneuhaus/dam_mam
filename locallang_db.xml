@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<T3locallang>
+	<meta type="array">
+		<description>tx_dam and related</description>
+		<type>database</type>
+		<csh_table></csh_table>
+		<fileId>EXT:dam/locallang_db.xml</fileId>
+		<labelContext type="array">
+			<label index="tx_dammam.mam"></label>
+			<label index="tx_dam.tx_dammam_mamuuid"></label>
+		</labelContext>
+	</meta>
+	<data type="array">
+		<languageKey index="default" type="array">
+			<label index="tx_dam.tx_dammam_mamuuid">UID</label>
+			<label index="tx_dam.tx_dammam_mime_type">Mimetype</label>
+			<label index="tx_dam.tx_dammam_file_type">Filetype</label>
+			<label index="tx_dam.tx_dammam_file_name">Filename</label>
+			<label index="tx_dam.tx_dammam_color_space">Colorspace</label>
+			<label index="tx_dam.tx_dammam_hpixels">Horizontal pixel</label>
+			<label index="tx_dam.tx_dammam_vpixels">Vertical pixel</label>
+			<label index="tx_dam.related_files">Related Files</label>
+            <label index="tx_dammam_properties">Properties</label>
+            <label index="tx_dammam_properties.property">Property</label>
+            <label index="tx_dammam_property_values">Propertyvalues</label>
+            <label index="tx_dammam_property_values.property">Property</label>
+            <label index="tx_dammam_property_values.dam">DAM Media</label>
+			<label index="tx_dammam.mam">MAM</label>
+		</languageKey>
+		<languageKey index="de" type="array">
+			<label index="tx_dam.tx_dammam_mamuuid">UID</label>
+			<label index="tx_dam.tx_dammam_mime_type">Mimetype</label>
+			<label index="tx_dam.tx_dammam_file_type">Dateityp</label>
+			<label index="tx_dam.tx_dammam_file_name">Dateiname</label>
+			<label index="tx_dam.tx_dammam_color_space">Farbraum</label>
+			<label index="tx_dam.tx_dammam_hpixels">Horizontale Pixel</label>
+			<label index="tx_dam.tx_dammam_vpixels">Vertikale Pixel</label>
+			<label index="tx_dam.related_files">Verknüpfte Dateien</label>
+            <label index="tx_dammam_properties">Properties</label>
+            <label index="tx_dammam_properties.property">Eigenschaft</label>
+            <label index="tx_dammam_property_values">Eigenschaftswerte</label>
+            <label index="tx_dammam_property_values.property">Property</label>
+            <label index="tx_dammam_property_values.dam">DAM Media</label>
+			<label index="tx_dammam.mam">MAM</label>
+		</languageKey>
+	</data>
+</T3locallang>

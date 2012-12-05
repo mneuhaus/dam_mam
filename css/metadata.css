@@ -1,0 +1,10 @@
+.formField1,
+.formField2,
+.formField3,
+.formField4{
+	border:none !important;
+}
+
+.tceforms-multiselect{
+	background:#fafafa;
+}

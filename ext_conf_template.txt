@@ -1,0 +1,2 @@
+# cat=basic; type=boolean; label= Disabled DAM Editing and Uploading: Disable this to allow Uploads and Changes in DAM additionally to the provided MAM Content. Be aware of the fact that local changes to MAM content will be overwitten on the next sync
+no_upload = 1
