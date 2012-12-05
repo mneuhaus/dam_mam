@@ -37,6 +37,13 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['scheduler']['tasks']['tx_dammam_garbage_collecto
 	'additionalFields' => 'tx_dammam_garbage_collector_additionalfieldprovider'
 );
 
+$TYPO3_CONF_VARS['SC_OPTIONS']['scheduler']['tasks']['tx_dammam_usage_exporter'] = array(
+	'extension' => $_EXTKEY,
+	'title' => 'MAM CMS Usage Exporter',
+	'description' => '',
+	'additionalFields' => 'tx_dammam_usage_exporter_additionalfieldprovider'
+);
+
 include_once(t3lib_extMgm::extPath('dam_mam', 'models/class.BaseModel.php'));
 include_once(t3lib_extMgm::extPath('dam_mam', 'models/class.DamModel.php'));
 include_once(t3lib_extMgm::extPath('dam_mam', 'models/class.DamCategoryModel.php'));

@@ -59,6 +59,7 @@ class tx_dammam_sync extends tx_scheduler_Task
 			}
 
 			$this->checkUnresolvedRelations();
+			$this->cleanUpAbandonedFiles($this->mediafolder);
 			$this->cleanUpAbandonedFolders($this->mediafolder);
 
 			#$object = DamModel::getByMamUID('data_20120911135000_C346401C268CC98A497B14F48FAA61DF');
@@ -210,7 +211,8 @@ class tx_dammam_sync extends tx_scheduler_Task
 			$this->processed[] = $file;
 		}
 
-		$this->recheckMissingFiles();
+		//TODO: nur zum Debuggen ausgeklammert
+        // $this->recheckMissingFiles();
 
 		$this->log("No files to import ", array("path" => $this->hotfolder, "files" => $files), 0);
 		return false;
@@ -314,6 +316,8 @@ class tx_dammam_sync extends tx_scheduler_Task
 	{
 		$files = scandir($this->hotfolder . "missing/");
 
+
+
 		if (count($files) < 1)
 			return;
 
@@ -403,6 +407,8 @@ class tx_dammam_sync extends tx_scheduler_Task
 
 	function rename($from, $to)
 	{
+
+
 		if (!stristr($from, ".json") && !$from == 'missing') {
 			$this->log("Tried to move Media file!",
 				array(
@@ -473,6 +479,56 @@ class tx_dammam_sync extends tx_scheduler_Task
 		}
 	}
 
+	protected $assetIndex = array();
+	public function cleanUpAbandonedFiles($path) {
+		if (empty($this->assetIndex)) {
+			$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_dam', '1=1');
+			foreach ($rows as $row) {
+				$file = PATH_site . $row['file_path'] . $row['file_name'];
+				if (!isset($this->assetIndex[$file])) {
+					$this->assetIndex[$file] = $row;
+				} elseif ($this->assetIndex[$file]['tstamp'] < $row['tstamp']) {
+					// $this->log('Newer Entry' . $row['file_name'], array(
+					// 	date('d.m.y H:i:s', $this->assetIndex[$file]['tstamp']) . '<' . date('m.d.y H:i:s', $row['tstamp']),
+					// 	$this->assetIndex[$file]['tx_dammam_mamuuid'] . ' == ' . $row['tx_dammam_mamuuid'],
+					// 	$this->assetIndex[$file]['deleted'] . ' == ' . $row['deleted'],
+					// ));
+					$this->assetIndex[$file] = $row;
+				}
+			}
+			//$this->log('assetIndex', $this->assetIndex);
+		}
+
+		$subPaths = scandir($path);
+		foreach ($subPaths as $name) {
+			if ($name == '.' || $name == '..' || $name == '.trash') {
+				continue;
+			}
+			$subPath = $path . $name;
+			if (is_dir($subPath)) {
+				$this->cleanUpAbandonedFiles($subPath . '/');
+			} else {
+				if (!isset($this->assetIndex[$subPath]) || $this->assetIndex[$subPath]['deleted']) {
+					$lastModification = filemtime($subPath);
+					if ($lastModification < (time() - (60 * 60 * 24))) {
+						$this->log('Deleting abandoned File: ' . $name, array(
+							'Path' => $subPath,
+							'Last modification' => date('d.m.y H:i:s', filemtime($subPath)),
+							'Asset' => isset($this->assetIndex[$subPath]) ? $this->assetIndex[$subPath] : array()
+						));
+						if (is_file($subPath) && !is_dir($subPath)) {
+							unlink($subPath);
+						}
+					} else {
+						// $this->log('File modified in the last day: ' . $name . ' : ' . date('d.m.y H:i:s', filemtime($subPath)), $this->assetIndex[$subPath]);
+					}
+				} else {
+					// $this->log('Tracked: ' . $name, $this->assetIndex[$subPath]);
+				}
+			}
+		}
+	}
+
 	public function cleanUpAbandonedFolders($path) {
 		$subPaths = scandir($path);
 		$containsFiles = FALSE;
@@ -480,15 +536,14 @@ class tx_dammam_sync extends tx_scheduler_Task
 			if ($name == '.' || $name == '..' || $name == '.trash') {
 				continue;
 			}
-			$subPath = $path . $name ;
-			$this->log($subPath);
+			$subPath = $path . $name;
 			if (is_dir($subPath)) {
 				$containsFiles = $this->cleanUpAbandonedFolders($subPath . '/');
 				if ($containsFiles) {
 					$containsFiles = TRUE;
 				} else {
 					$this->log('Deleting empty Folder: ' . $name, array(
-						"Path" => $subPath
+						'Path' => $subPath
 					));
 					rmdir($subPath);
 				}
