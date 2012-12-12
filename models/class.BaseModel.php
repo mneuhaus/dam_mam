@@ -85,7 +85,10 @@ class BaseModel {
 		$extraData = "";
 		foreach ($unusedProperties as $mamField) {
 			$value = $this->callMAMConverter($data->properties->$mamField);
-			if(!empty($value) && strval($value)){
+			if (is_array($value)) {
+				$value = implode(",", $value);
+			}
+			if(!empty($value) && !is_object($value) && strval($value)){
 				$extraData.= $mamField . ": " . $value . "\n";
 			}
 		}

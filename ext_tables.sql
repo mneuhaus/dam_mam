@@ -9,7 +9,7 @@ CREATE TABLE tx_dam (
     tx_dammam_color_space tinytext,
     tx_dammam_hpixels tinytext,
     tx_dammam_vpixels tinytext,
-	tx_dammam_related_files tinytext,
+	tx_dammam_related_files text,
   	tx_dammam_language tinytext,
 );
 

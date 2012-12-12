@@ -62,10 +62,6 @@ class tx_dammam_sync extends tx_scheduler_Task
 			$this->cleanUpAbandonedFiles($this->mediafolder);
 			$this->cleanUpAbandonedFolders($this->mediafolder);
 
-			#$object = DamModel::getByMamUID('data_20120911135000_C346401C268CC98A497B14F48FAA61DF');
-			#$this->log("blaaa", array($object));
-			#$object->save();
-
 			$this->stat["stop"] = function_exists("microtime") ? microtime(true) : time();
 
 			$s = $this->stat;
@@ -151,7 +147,7 @@ class tx_dammam_sync extends tx_scheduler_Task
 			}
 			if (!stristr($file, "export")) {
 				if (!is_dir($file) && basename($file) !== "conf.json") {
-					$this->log("Skipping: " . basename($file), array(), 0);
+					// $this->log("Skipping: " . basename($file), array(), 0);
 				}
 				continue;
 			}
@@ -172,15 +168,42 @@ class tx_dammam_sync extends tx_scheduler_Task
 					continue;
 				}
 
-				// convert complex xe+ notated numbers into strings, because json_decode can't handle them
-				$content = preg_replace('/"number": *(.+e\+.+?)(,*)/', '"number": "$1"$2', $content);
-
 				$result = json_decode($content);
+				// convert complex xe+ notated numbers into strings, because json_decode can't handle them
+				if (!is_a($result, 'stdClass')) {
+					$content = preg_replace('/"number": *(.+e\+.+?)(,*)/', '"number": "$1"$2', $content);
+					$result = json_decode($content);
+				}
+
 				if (!is_a($result, "stdClass")) {
+					 switch (json_last_error()) {
+				        case JSON_ERROR_NONE:
+				            $jsonError = ' - No errors';
+				        break;
+				        case JSON_ERROR_DEPTH:
+				            $jsonError = ' - Maximum stack depth exceeded';
+				        break;
+				        case JSON_ERROR_STATE_MISMATCH:
+				            $jsonError = ' - Underflow or the modes mismatch';
+				        break;
+				        case JSON_ERROR_CTRL_CHAR:
+				            $jsonError = ' - Unexpected control character found';
+				        break;
+				        case JSON_ERROR_SYNTAX:
+				            $jsonError = ' - Syntax error, malformed JSON';
+				        break;
+				        case JSON_ERROR_UTF8:
+				            $jsonError = ' - Malformed UTF-8 characters, possibly incorrectly encoded';
+				        break;
+				        default:
+				            $jsonError = ' - Unknown error';
+				        break;
+				    }
 					$this->log("The file " . basename($file) . " could not be loaded",
 						array(
 							"Error:" => "The file '" . $file . "' can not be read or has syntax errors.",
-							"Hint:" => "Please check that the apache user has rights to the read the file and that it is a valid json document"
+							"Hint:" => "Please check that the apache user has rights to the read the file and that it is a valid json document",
+							"JSON Error" => $jsonError
 						), 3);
 					$this->rename($file, dirname($file) . "/failed/" . basename($file));
 					continue;
@@ -211,8 +234,7 @@ class tx_dammam_sync extends tx_scheduler_Task
 			$this->processed[] = $file;
 		}
 
-		//TODO: nur zum Debuggen ausgeklammert
-        // $this->recheckMissingFiles();
+		$this->recheckMissingFiles();
 
 		$this->log("No files to import ", array("path" => $this->hotfolder, "files" => $files), 0);
 		return false;
@@ -264,14 +286,14 @@ class tx_dammam_sync extends tx_scheduler_Task
 							// The older the Import gets the more unlikely it is that it will come back
 							// So the interval to check this file will be doubled on each try
 							// 1min -> 2min -> 4min -> 8min -> 16min ...
-							if (!property_exists($item, "import_next_try"))
-								$time = (60 * 1);
-							else
-								$time = (($item->import_next_try - $item->import_date) * 2);
+							// if (!property_exists($item, "import_next_try"))
+							// 	$time = (60 * 1);
+							// else
+							// 	$time = (($item->import_next_try - $item->import_date) * 2);
 
-							$item->import_next_try = time() + $time;
+							$item->import_next_try = time() + (60 * 5);
 
-							$this->log("File does not exist: " . $item->data_name . " | Rechecking in: " . intval(($time / 60)) . "min", array(
+							$this->log("File does not exist: " . $item->data_name . " | Rechecking in: 5 min", array(
 								"file" => $file,
 								"damObject" => $damObject
 							), 3);
@@ -290,10 +312,12 @@ class tx_dammam_sync extends tx_scheduler_Task
 						if (is_object($object) && method_exists($object, 'save')) {
 							$this->log('Deleting: ' . $item->data_name, $object);
 							if (strlen($object->tx_dammam_mamuuid) > 0) {
-								$GLOBALS['TYPO3_DB']->exec_DELETEquery('tx_dammam_unresolved_relations', 'uuid_local="'.$object->tx_dammam_mamuuid.'"');
+								$GLOBALS['TYPO3_DB']->exec_DELETEquery('tx_dammam_unresolved_relations', 'uuid_local="' . $object->tx_dammam_mamuuid . '"');
 							}
 							$object->deleted = 1;
 							$object->save();
+						} else {
+							$this->log('The Asset you\'re trying to delete doesn\'t exist: ' . $item->data_name);
 						}
 
 						$this->stat['files_deleted']++;
@@ -312,19 +336,21 @@ class tx_dammam_sync extends tx_scheduler_Task
 		}
 	}
 
-	public function recheckMissingFiles()
-	{
-		$files = scandir($this->hotfolder . "missing/");
+	public function recheckMissingFiles() {
+		$files = scandir($this->hotfolder . 'missing/');
 
 
 
-		if (count($files) < 1)
+		if (count($files) < 1) {
 			return;
+		}
 
-		$this->log("Checking for Missing files: " . basename($file), array($files), 0);
+		$this->log('Checking for Missing files: ' . basename($file), array($files), 0);
 		$counter = 0;
 		foreach ($files as $file) {
-			if (substr($file, 0, 1) == ".") continue;
+			if (substr($file, 0, 1) == '.') {
+				continue;
+			}
 
 			if (!stristr($file, "missing")) {
 				$this->log("Skipping: " . basename($file), array(), 0);
@@ -510,7 +536,7 @@ class tx_dammam_sync extends tx_scheduler_Task
 			} else {
 				if (!isset($this->assetIndex[$subPath]) || $this->assetIndex[$subPath]['deleted']) {
 					$lastModification = filemtime($subPath);
-					if ($lastModification < (time() - (60 * 60 * 24))) {
+					if ($lastModification < (time() - (60 * 30))) {
 						$this->log('Deleting abandoned File: ' . $name, array(
 							'Path' => $subPath,
 							'Last modification' => date('d.m.y H:i:s', filemtime($subPath)),
@@ -520,7 +546,7 @@ class tx_dammam_sync extends tx_scheduler_Task
 							unlink($subPath);
 						}
 					} else {
-						// $this->log('File modified in the last day: ' . $name . ' : ' . date('d.m.y H:i:s', filemtime($subPath)), $this->assetIndex[$subPath]);
+						// $this->log('File was recently modified: ' . $name . ' : ' . date('d.m.y H:i:s', filemtime($subPath)), $this->assetIndex[$subPath]);
 					}
 				} else {
 					// $this->log('Tracked: ' . $name, $this->assetIndex[$subPath]);
@@ -548,7 +574,7 @@ class tx_dammam_sync extends tx_scheduler_Task
 					rmdir($subPath);
 				}
 			} else {
-				return TRUE;
+				$containsFiles = TRUE;
 			}
 		}
 		return $containsFiles;

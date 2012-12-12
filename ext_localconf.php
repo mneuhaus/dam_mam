@@ -19,6 +19,7 @@ if($_extConfig['no_upload']){
 		$TYPO3_CONF_VARS['SC_OPTIONS']['typo3/show_item.php']['typeRendering'][$key] = 'EXT:dam_mam/dam/class.tx_dammam_show_item.php:&tx_dammam_show_item';
 	}
 }
+$TYPO3_CONF_VARS[TYPO3_MODE]['XCLASS']['ext/dam/components/class.tx_dam_selectionFolder.php'] = t3lib_extMgm::extpath("dam_mam", "xclass/class.ux_tx_dam_selectionFolder.php");
 
 $TYPO3_CONF_VARS['EXTCONF']['css_filelinks']['pi1_hooks']['getFilesForCssUploads']="EXT:dam_mam/hooks/class.user_cssfilelinks.php:user_cssfilelinks";
 $TYPO3_CONF_VARS['EXTCONF']['css_filelinks']['pi1_hooks_more']['fillFileMarkers'][] = 'EXT:dam_mam/hooks/class.user_cssfilelinks.php:user_cssfilelinks';

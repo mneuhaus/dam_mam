@@ -46,11 +46,11 @@ class DamModel extends BaseModel {
 
 	var $index_type = "man";
 
-	public function save($handleRelatedFiles = true){
+	public function save($handleRelatedFiles = TRUE) {
 		$values = get_object_vars($this);
-		if(!isset($values["uid"])){
+		if (!isset($values['uid'])) {
 			$uid = tx_dam_db::insertRecordRaw($values);
-			$values["uid"] = $uid;
+			$values['uid'] = $uid;
 		}
 
 		tx_dam_db::insertUpdateData($values);
@@ -62,45 +62,79 @@ class DamModel extends BaseModel {
 
 
 		if (!empty($values['tx_dammam_related_files']) && $handleRelatedFiles) {
-			#$this->logging->log("Updated related files reversely for:" . $values["title"], array(
-			#	"related files" => $values['tx_dammam_related_files'],
-			#	"this" => $this
-			#), 0);
+				// $this->logging->log("Updated related files reversely for:" . $values["title"], array(
+				// 	"related files" => $values['tx_dammam_related_files'],
+				// 	"this" => $this
+				// ), 0);
 
-			$relatedFiles = explode(",", $values['tx_dammam_related_files']);
+			$relatedFiles = explode(',', $values['tx_dammam_related_files']);
 			foreach ($relatedFiles as $relatedFile) {
 				$damObject = DamModel::getByUID($relatedFile);
 				if (is_object($damObject)) {
-					$uids = explode(",", $damObject->tx_dammam_related_files);
-					$uids[] = $values["uid"];
-					$damObject->tx_dammam_related_files = trim(implode(",", array_unique($uids)), ",");
-					$damObject->save(false);
+					$uids = explode(',', $damObject->tx_dammam_related_files);
+					$uids[] = $values['uid'];
+					$damObject->tx_dammam_related_files = trim(implode(',', array_unique($uids)), ',');
+					$damObject->save(FALSE);
 
-					#$this->logging->log("Updated related files for:" . $damObject->title, array(
-					#	"damObject" => $damObject
-					#), 0);
+					// $this->logging->log("Updated related files for:" . $damObject->title, array(
+					// 	"damObject" => $damObject
+					// ), 0);
 				}
 			}
 		}
 
-		$manualUpdates = array(
-			"sys_language_uid" => $this->sys_language_uid,
-			"pid" => $this->pid,
-			"tx_dammam_language" => $this->tx_dammam_language,
-			"tx_dammam_related_files" => $this->tx_dammam_related_files
-		);
-		$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery($this->table, "uid=" . $values["uid"], $manualUpdates);
+		$values = get_object_vars($this);
+		$row = $GLOBALS['TYPO3_DB']->exec_SELECTgetSingleRow('*', 'tx_dam', '1=1');
+		unset($row['uid']);
+		$manualUpdates = array();
+		foreach (array_keys($row) as $key) {
+			if (isset($values[$key])) {
+				$manualUpdates[$key] = $values[$key];
+			}
+		}
+		$res = $GLOBALS['TYPO3_DB']->exec_UPDATEquery($this->table, 'uid=' . $values['uid'], $manualUpdates);
 
 
-		$GLOBALS['TYPO3_DB']->exec_DELETEquery('tx_dam_mm_cat', 'uid_local="'.$values["uid"].'"');
-		$categories = explode(",", $values["category"]);
+		$GLOBALS['TYPO3_DB']->exec_DELETEquery('tx_dam_mm_cat', 'uid_local="' . $values["uid"] . '"');
+		$categories = explode(',', $values['category']);
 		foreach ($categories as $category) {
 			$res = $GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_dam_mm_cat', array(
-				"uid_local" => $values["uid"],
-				"uid_foreign" => $category
+				'uid_local' => $values['uid'],
+				'uid_foreign' => $category
 			));
 		}
 
+		// Integrety check
+		$values = get_object_vars($this);
+		$databaseState = DamModel::getByUID($values['uid']);
+		if (is_object($databaseState)) {
+			$databaseValues = get_object_vars($databaseState);
+			$differences = array();
+			foreach ($databaseValues as $key => $value) {
+				if (in_array($key, array('tstamp', 'category'))) {
+					continue;
+				}
+				if ($values[$key]) {
+					if ($values[$key] != $value) {
+						$differences = array(
+							'Field' => $key,
+							'Database' => is_object($value) ? '[object]' : $value,
+							'New Value' => is_object($values[$key]) ? '[object]' : $values[$key],
+						);
+					}
+				}
+			}
+			if (count($differences) > 0 && TRUE && isset($this->logging)) {
+				$tce = t3lib_div::makeInstance('t3lib_TCEmain');
+
+				$this->logging->log('Unsaved changes detected: ', array(
+				#	'UID' => $values['uid'],
+				#	'MAM UID' => $values['tx_dammam_mamuuid'],
+					'Differences' => $differences,
+					'Error Log' => $tce->errorLog
+				), 3);
+			}
+		}
 	}
 
 	public function media_type($value){
@@ -262,6 +296,7 @@ class DamModel extends BaseModel {
 				}
 				$category->pid = $this->pid;
 				$category->parent_id = $parent;
+				$category->deleted = 0;
 				$category->save();
 				$categories[] = $category->uid;
 			}
@@ -283,6 +318,7 @@ class DamModel extends BaseModel {
 			foreach($categoriesRows as $categoryRow) {
 				$categories[] = $categoryRow["uid_foreign"];
 			}
+			sort($categories);
 			$object->category = implode(",", $categories);
 
 			return $object;
@@ -305,6 +341,7 @@ class DamModel extends BaseModel {
 			foreach($categoriesRows as $categoryRow) {
 				$categories[] = $categoryRow["uid_foreign"];
 			}
+			sort($categories);
 			$object->category = implode(",", $categories);
 
 			return $object;
