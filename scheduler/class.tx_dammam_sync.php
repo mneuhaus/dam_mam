@@ -564,19 +564,28 @@ class tx_dammam_sync extends tx_scheduler_Task
 			}
 			$subPath = $path . $name;
 			if (is_dir($subPath)) {
-				$containsFiles = $this->cleanUpAbandonedFolders($subPath . '/');
-				if ($containsFiles) {
-					$containsFiles = TRUE;
-				} else {
-					$this->log('Deleting empty Folder: ' . $name, array(
-						'Path' => $subPath
-					));
-					rmdir($subPath);
-				}
+				$containsFiles = $this->cleanUpAbandonedFolders($subPath . '/') ? TRUE : $containsFiles;
 			} else {
 				$containsFiles = TRUE;
 			}
 		}
+
+		$stat = stat($path);
+		if (!$containsFiles) {
+			if ($stat['mtime'] < ( time() - ( 60 * 30 ) )) {
+				$this->log('Deleting empty Folder: ' . basename($path), array(
+					'Path' => $path,
+					'Last modification' => date('H:i:s d.m.Y', $stat['mtime'])
+				));
+				rmdir($subPath);
+			} else {
+				$this->log('Found empty Folder which has been modified in the last 30 min: ' . basename($path), array(
+					'Path' => $path,
+					'Last modification' => date('H:i:s d.m.Y', $stat['mtime'])
+				));
+			}
+		}
+
 		return $containsFiles;
 	}
 }
