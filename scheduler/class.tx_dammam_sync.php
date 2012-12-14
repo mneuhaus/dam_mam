@@ -135,14 +135,13 @@ class tx_dammam_sync extends tx_scheduler_Task
 		$this->media_pid = intval($this->media_pid);
 	}
 
-	public function process()
-	{
+	public function process() {
 		$files = scandir($this->hotfolder);
 		$counter = 0;
 		foreach ($files as $file) {
 			if (substr($file, 0, 1) == ".") continue;
 
-			if (stristr($file, "missing")) {
+			if (stristr($file, "missing_")) {
 				$this->rename($file, $this->hotfolder . "/missing/" . basename($file));
 			}
 			if (!stristr($file, "export")) {
@@ -339,8 +338,6 @@ class tx_dammam_sync extends tx_scheduler_Task
 	public function recheckMissingFiles() {
 		$files = scandir($this->hotfolder . 'missing/');
 
-
-
 		if (count($files) < 1) {
 			return;
 		}
@@ -352,55 +349,63 @@ class tx_dammam_sync extends tx_scheduler_Task
 				continue;
 			}
 
-			if (!stristr($file, "missing")) {
-				$this->log("Skipping: " . basename($file), array(), 0);
+			if (!stristr($file, 'missing')) {
+				$this->log('Skipping: ' . basename($file), array(), 0);
 				continue;
 			}
 
-			if ($counter >= $this->max) return;
+			if ($counter >= $this->max) {
+				return;
+			}
 			$counter++;
 
-			$file = $this->hotfolder . "missing/" . $file;
+			$file = $this->hotfolder . 'missing/' . $file;
 
 			if ($file) {
-				$this->log("Loading: " . basename($file), array(), 0);
+				$this->log('Loading: ' . basename($file), array(), 0);
 
 				$content = file_get_contents($file);
 				if (empty($content)) {
-					$this->log("The file " . basename($file) . " is empty.",
+					$this->log('The file ' . basename($file) . ' is empty.',
 						array(), 1);
-					$this->rename($file, dirname($file) . "/failed/" . basename($file));
+					$this->rename($file, dirname($file) . '/failed/' . basename($file));
 					continue;
 				}
 
 				$result = json_decode($content);
-				if (!is_a($result, "stdClass")) {
-					$this->log("The file " . basename($file) . " could not be loaded",
+				if (!is_a($result, 'stdClass')) {
+					$this->log('The file ' . basename($file) . ' could not be loaded',
 						array(
-							"Error:" => "The file '" . $file . "' can not be read or has syntax errors.",
-							"Hint:" => "Please check that the apache user has rights to the read the file and that it is a valid json document"
+							'Error:' => 'The file "' . $file . '" can not be read or has syntax errors.',
+							'Hint:' => 'Please check that the apache user has rights to the read the file and that it is a valid json document'
 						), 3);
-					$this->rename($file, dirname($file) . "/failed/" . basename($file));
+					$this->rename($file, dirname($file) . '/failed/' . basename($file));
 					continue;
 				}
 
 				$this->takeAction($result->data);
 				unset($result);
 
-				if ($this->rename($file, dirname($file) . "/../processed/" . basename($file)))
-					$this->log(basename($file) . " was sucessfully imported and archived...", array($file, $this->missing), 1);
-				else
-					$this->log(basename($file) . " was imported but could not be archived", array(
-						"source" => $file,
-						"target" => dirname($file) . "/../processed/" . basename($file)
+				if ($this->rename($file, dirname($file) . '/../processed/' . basename($file))) {
+					$this->log(basename($file) . ' was sucessfully imported and archived...', array($file, $this->missing), 1);
+				} else {
+					$this->log(basename($file) . ' was imported but could not be archived', array(
+						'source' => $file,
+						'target' => dirname($file) . '/../processed/' . basename($file)
 					), 1);
+				}
 
 				if (count($this->missing_files) > 0) {
-					$missing_file = dirname($file) . "/" . basename($file);
+					$missing_file = dirname($file) . '/missing_' . time() . '.json';
 					$data = new stdClass();
 					$data->count = count($this->missing_files);
 					$data->data = (object)$this->missing_files;
 					file_put_contents($missing_file, json_encode($data));
+
+					$this->log('Not all missing files could be found', array(
+						'missing_file' => $missing_file,
+						'still missing:' => $this->missing_files
+					), 1);
 				}
 			}
 			$this->processed[] = $file;
@@ -431,15 +436,17 @@ class tx_dammam_sync extends tx_scheduler_Task
 		return true;
 	}
 
-	function rename($from, $to)
-	{
-
-
-		if (!stristr($from, ".json") && !$from == 'missing') {
-			$this->log("Tried to move Media file!",
+	public function rename($from, $to) {
+		$this->log('Moving File:' . basename($from),
+			array(
+				'From:' => $from,
+				'To:' => $to
+			), 0);
+		if (!stristr($from, '.json') && !$from == 'missing') {
+			$this->log('Tried to move Media file!',
 				array(
-					"From:" => $from,
-					"To:" => $to
+					'From:' => $from,
+					'To:' => $to
 				), 3);
 			return;
 		}
@@ -449,8 +456,7 @@ class tx_dammam_sync extends tx_scheduler_Task
 		return 0;
 	}
 
-	public function checkUnresolvedRelations()
-	{
+	public function checkUnresolvedRelations() {
 		$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows("*", "tx_dammam_unresolved_relations", "1=1");
 		$this->log("Updating relations", array(	"relations" => $rows     ), 0);
 		foreach ($rows as $row) {
@@ -571,13 +577,14 @@ class tx_dammam_sync extends tx_scheduler_Task
 		}
 
 		$stat = stat($path);
-		if (!$containsFiles) {
+		if (!$containsFiles && count($subPaths) == 2) {
 			if ($stat['mtime'] < ( time() - ( 60 * 30 ) )) {
 				$this->log('Deleting empty Folder: ' . basename($path), array(
 					'Path' => $path,
-					'Last modification' => date('H:i:s d.m.Y', $stat['mtime'])
+					'Last modification' => date('H:i:s d.m.Y', $stat['mtime']),
+					'Files' => $subPaths
 				));
-				rmdir($subPath);
+				rmdir($path);
 			} else {
 				$this->log('Found empty Folder which has been modified in the last 30 min: ' . basename($path), array(
 					'Path' => $path,

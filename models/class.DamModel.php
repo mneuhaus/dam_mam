@@ -233,13 +233,15 @@ class DamModel extends BaseModel {
 						$values = array(
 							'crdate' => time(),
 							'uuid_local' => $this->tx_dammam_mamuuid,
-							'uuid_foreign' => isset($matches["value20"]) > 0 ? $matches["value20"] : $matches["value25"]
+							'uuid_foreign' => strlen($matches["value20"]) > 0 ? $matches["value20"] : $matches["value25"]
 						);
 						$res = $GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_dammam_unresolved_relations', $values);
+					} else {
+						// $this->logging->log('Relation not found', array(
+						// 	'mid' => $mid,
+						// 	'matches' => $matches
+						// ));
 					}
-					#$this->logging->log("Relation not found", array(
-					#	"mid" => $mid
-					#));
 				}
 
 				$values = array(
