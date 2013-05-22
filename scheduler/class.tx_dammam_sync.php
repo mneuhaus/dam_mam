@@ -100,12 +100,24 @@ class tx_dammam_sync extends tx_scheduler_Task {
 		return TRUE;
 	}
 
-	public function log($msg, $data = NULL, $severity = 0) {
-		if ($severity >= $this->debuglevel) {
+	public function log($msg, $data = NULL, $severity = 0, $notify = FALSE) {
+		if ($severity >= $this->debuglevel || $notify === TRUE) {
 			$data = $this->objectToArray($data);
-			t3lib_div::devLog($msg, 'dam_mam', $severity, $data);
-			unset($data);
 		}
+
+		if ($severity >= $this->debuglevel) {
+			t3lib_div::devLog($msg, 'dam_mam', $severity, $data);
+		}
+
+		if ($notify === TRUE) {
+			$mail = t3lib_div::makeInstance('t3lib_mail_Message');
+			t3lib_div::devLog($this->notificationEmails, 'dam_mam', $severity, $data);
+			$mail->setTo(explode(',', $this->notificationEmails));
+			$mail->setSubject($msg);
+			$mail->setBody(var_export($data, TRUE));
+			$mail->send();
+		}
+		unset($data);
 	}
 
 	public function objectToArray($object) {
@@ -508,7 +520,7 @@ class tx_dammam_sync extends tx_scheduler_Task {
 							'Path' => $subPath,
 							'Last modification' => date('d.m.y H:i:s', filemtime($subPath)),
 							'Asset' => isset($this->assetIndex[$subPath]) ? $this->assetIndex[$subPath] : array()
-						), 1);
+						), 1, TRUE);
 						if (is_file($subPath) && !is_dir($subPath)) {
 							unlink($subPath);
 						}
@@ -544,7 +556,7 @@ class tx_dammam_sync extends tx_scheduler_Task {
 					'Path' => $path,
 					'Last modification' => date('H:i:s d.m.Y', $stat['mtime']),
 					'Files' => $subPaths
-				), 1);
+				), 1, TRUE);
 				rmdir($path);
 			} else {
 				$this->log('Found empty Folder which has been modified in the last 30 min: ' . basename($path), array(

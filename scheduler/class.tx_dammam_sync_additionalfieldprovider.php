@@ -79,6 +79,12 @@ class tx_dammam_sync_AdditionalFieldProvider implements tx_scheduler_AdditionalF
 				3 => "Error"
 			)
 		),
+		"notificationEmails" => array(
+			"label" => "Notification E-Mails",
+			"type" => "text",
+			"default" => "",
+			"style" => "width:360px;"
+		),
 	);
 	/**
 	 * Field generation.
