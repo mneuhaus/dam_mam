@@ -83,19 +83,125 @@ $tempColumns = array (
 		'label' => 'LLL:EXT:lang/locallang_general.xml:LGL.language',
 		'config' => array(
 
-            'type' => 'group',
-            'internal_type' => 'db',
-            'allowed' => 'sys_language',
+   //          'type' => 'group',
+   //          'internal_type' => 'db',
+   //          'allowed' => 'sys_language',
+   //          'size' => 5,
+   //          'minitems' => 0,
+   //          'maxitems' => 10,
+
+            'type' => 'select',
+            'foreign_table' => 'sys_language',
             'size' => 5,
             'minitems' => 0,
             'maxitems' => 10,
-
-#			'type' => 'select',
-#			'foreign_table' => 'sys_language',
-#			'foreign_table_where' => 'ORDER BY sys_language.title',
-#			'items' => array(
-#				array('LLL:EXT:lang/locallang_general.xml:LGL.default_value',0)
-#			)
+			'items' => array(
+				array($_extConfig['default_language_label'], 0)
+			)
+		)
+	),
+	'tx_dammam_bedienungsanleitung' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_bedienungsanleitung',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_de' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_de',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_en' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_en',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_fr' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_fr',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_es' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_es',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_it' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_it',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_nl' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_nl',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_ru' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_ru',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_pl' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_pl',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_hu' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_hu',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_cs' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_cs',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_zhen' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_zhen',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
+		)
+	),
+	'tx_dammam_assetname_zh' => array (
+		'exclude' => 0,
+		'label' => 'LLL:EXT:dam_mam/locallang_db.xml:tx_dammam_assetname_zh',
+		'config' => array (
+			'type' => 'input',
+			'size' => '30',
 		)
 	),
 );
@@ -107,6 +213,6 @@ $tempColumns['tx_dammam_related_files']['config']['userFunc'] = 'user_dammam_rel
 
 t3lib_div::loadTCA('tx_dam');
 t3lib_extMgm::addTCAcolumns('tx_dam',$tempColumns,1);
-t3lib_extMgm::addToAllTCAtypes('tx_dam','--div--;LLL:EXT:dam_mam/locallang_db.xml:tx_dammam.mam, tx_dammam_mamuuid;;;;1-1-1, tx_dammam_mime_type, tx_dammam_file_type, tx_dammam_file_name, tx_dammam_color_space, tx_dammam_hpixels, tx_dammam_vpixels, tx_dammam_related_files, tx_dammam_language');
+t3lib_extMgm::addToAllTCAtypes('tx_dam','--div--;LLL:EXT:dam_mam/locallang_db.xml:tx_dammam.mam, tx_dammam_mamuuid;;;;1-1-1, tx_dammam_mime_type, tx_dammam_file_type, tx_dammam_file_name, tx_dammam_color_space, tx_dammam_hpixels, tx_dammam_vpixels, tx_dammam_related_files, tx_dammam_language, tx_dammam_bedienungsanleitung, tx_dammam_assetname_de, tx_dammam_assetname_en, , tx_dammam_assetname_fr, tx_dammam_assetname_es, tx_dammam_assetname_it, tx_dammam_assetname_nl, tx_dammam_assetname_ru, tx_dammam_assetname_pl, tx_dammam_assetname_hu, tx_dammam_assetname_cs, tx_dammam_assetname_zhen, tx_dammam_assetname_zh');
 
 ?>

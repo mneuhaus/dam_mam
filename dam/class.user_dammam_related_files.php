@@ -28,7 +28,8 @@ class user_dammam_related_files extends tx_dam_tceFunc{
 
 				$result.= '<td>' . $row["title"] . '</td>';
 
-				$result.= '<td>' . (isset($languages[$row["tx_dammam_language"]]) ? $languages[$row["tx_dammam_language"]]["title"] : 'Default') . '</td>';
+				$_extConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']["dam_mam"]);
+				$result.= '<td>' . (isset($languages[$row["tx_dammam_language"]]) ? $languages[$row["tx_dammam_language"]]["title"] : $GLOBALS['LANG']->sL($_extConfig['default_language_label'])) . '</td>';
 
 				$path = PATH_site . $row["file_path"] . $row['file_name'];
 				$url = 'http://crossmedia.wanzl.he-hosting.de/typo3/show_item.php?table='.($path).'&uid=';

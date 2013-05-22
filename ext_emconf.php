@@ -1,14 +1,14 @@
 <?php
 
-########################################################################
-# Extension Manager/Repository config file for ext "dam_mam".
-#
-# Auto generated 30-10-2012 09:37
-#
-# Manual updates:
-# Only the data in the array - everything else is removed by next
-# writing. "version" and "dependencies" must not be touched!
-########################################################################
+/***************************************************************
+ * Extension Manager/Repository config file for ext "dam_mam".
+ *
+ * Auto generated 13-02-2013 10:40
+ *
+ * Manual updates:
+ * Only the data in the array - everything else is removed by next
+ * writing. "version" and "dependencies" must not be touched!
+ ***************************************************************/
 
 $EM_CONF[$_EXTKEY] = array(
 	'title' => 'MAM CMS Connecter',
@@ -29,7 +29,7 @@ $EM_CONF[$_EXTKEY] = array(
 	'clearCacheOnLoad' => 0,
 	'lockType' => '',
 	'author_company' => '',
-	'version' => '1.0.14',
+	'version' => '1.0.22',
 	'constraints' => array(
 		'depends' => array(
 			'php' => '5.2.6-0.0.0',
@@ -49,7 +49,7 @@ $EM_CONF[$_EXTKEY] = array(
 			'devlog' => '',
 		),
 	),
-	'_md5_values_when_last_written' => 'a:27:{s:9:"ChangeLog";s:4:"1233";s:16:"ext_autoload.php";s:4:"7863";s:21:"ext_conf_template.txt";s:4:"13c0";s:12:"ext_icon.gif";s:4:"1bdc";s:17:"ext_localconf.php";s:4:"deb2";s:14:"ext_tables.php";s:4:"8cc9";s:14:"ext_tables.sql";s:4:"90c9";s:13:"locallang.xml";s:4:"12c8";s:16:"locallang_db.xml";s:4:"6e0c";s:10:"README.txt";s:4:"ee2d";s:12:"tsconfig.txt";s:4:"659d";s:16:"css/metadata.css";s:4:"95ca";s:33:"dam/class.tx_dammam_show_item.php";s:4:"494b";s:39:"dam/class.user_dammam_related_files.php";s:4:"fd43";s:57:"dam/TreeClasses/class.tx_dammam_selectionMAMProperies.php";s:4:"6c39";s:14:"doc/manual.pdf";s:4:"51ad";s:14:"doc/manual.sxw";s:4:"0b87";s:19:"doc/wizard_form.dat";s:4:"d4c0";s:20:"doc/wizard_form.html";s:4:"6544";s:33:"hooks/class.user_cssfilelinks.php";s:4:"9d25";s:26:"models/class.BaseModel.php";s:4:"267c";s:33:"models/class.DamCategoryModel.php";s:4:"4e09";s:25:"models/class.DamModel.php";s:4:"61ff";s:34:"scheduler/class.tx_dammam_sync.php";s:4:"2dc9";s:58:"scheduler/class.tx_dammam_sync_additionalfieldprovider.php";s:4:"e7ab";s:37:"xclass/class.ux_tx_dam_actioncall.php";s:4:"fd7b";s:38:"xclass/class.ux_tx_dam_listrecords.php";s:4:"1f12";}',
+	'_md5_values_when_last_written' => 'a:34:{s:9:"ChangeLog";s:4:"1233";s:16:"ext_autoload.php";s:4:"a6f6";s:21:"ext_conf_template.txt";s:4:"13c0";s:12:"ext_icon.gif";s:4:"1bdc";s:17:"ext_localconf.php";s:4:"05ff";s:14:"ext_tables.php";s:4:"b981";s:14:"ext_tables.sql";s:4:"9092";s:13:"locallang.xml";s:4:"12c8";s:16:"locallang_db.xml";s:4:"6e0c";s:11:"ratchet.php";s:4:"6d80";s:10:"README.txt";s:4:"ee2d";s:12:"tsconfig.txt";s:4:"659d";s:16:"css/metadata.css";s:4:"95ca";s:33:"dam/class.tx_dammam_show_item.php";s:4:"494b";s:39:"dam/class.user_dammam_related_files.php";s:4:"fd43";s:57:"dam/TreeClasses/class.tx_dammam_selectionMAMProperies.php";s:4:"6c39";s:14:"doc/manual.pdf";s:4:"51ad";s:14:"doc/manual.sxw";s:4:"0b87";s:19:"doc/wizard_form.dat";s:4:"d4c0";s:20:"doc/wizard_form.html";s:4:"6544";s:33:"hooks/class.user_cssfilelinks.php";s:4:"9d25";s:26:"models/class.BaseModel.php";s:4:"ef79";s:33:"models/class.DamCategoryModel.php";s:4:"4e09";s:25:"models/class.DamModel.php";s:4:"2d15";s:47:"scheduler/class.tx_dammam_garbage_collector.php";s:4:"933a";s:71:"scheduler/class.tx_dammam_garbage_collector_additionalfieldprovider.php";s:4:"a382";s:46:"scheduler/class.tx_dammam_relation_updater.php";s:4:"0c12";s:34:"scheduler/class.tx_dammam_sync.php";s:4:"b276";s:58:"scheduler/class.tx_dammam_sync_additionalfieldprovider.php";s:4:"e7ab";s:44:"scheduler/class.tx_dammam_usage_exporter.php";s:4:"ec0f";s:68:"scheduler/class.tx_dammam_usage_exporter_additionalfieldprovider.php";s:4:"f716";s:37:"xclass/class.ux_tx_dam_actioncall.php";s:4:"fd7b";s:38:"xclass/class.ux_tx_dam_listrecords.php";s:4:"1f12";s:42:"xclass/class.ux_tx_dam_selectionFolder.php";s:4:"dc6b";}',
 	'suggests' => array(
 	),
 );

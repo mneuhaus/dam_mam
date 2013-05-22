@@ -26,6 +26,19 @@
             <label index="tx_dammam_property_values.property">Property</label>
             <label index="tx_dammam_property_values.dam">DAM Media</label>
 			<label index="tx_dammam.mam">MAM</label>
+			<label index="tx_dammam_bedienungsanleitung">Manual</label>
+			<label index="tx_dammam_assetname_de">German</label>
+			<label index="tx_dammam_assetname_en">English</label>
+			<label index="tx_dammam_assetname_fr">French</label>
+			<label index="tx_dammam_assetname_es">Spanish</label>
+			<label index="tx_dammam_assetname_it">Italian</label>
+			<label index="tx_dammam_assetname_nl">Dutch</label>
+			<label index="tx_dammam_assetname_ru">Russian</label>
+			<label index="tx_dammam_assetname_pl">Polish</label>
+			<label index="tx_dammam_assetname_hu">Hungarian</label>
+			<label index="tx_dammam_assetname_cs">Czech</label>
+			<label index="tx_dammam_assetname_zhen">Chinese / English</label>
+			<label index="tx_dammam_assetname_zh">Chinese</label>
 		</languageKey>
 		<languageKey index="de" type="array">
 			<label index="tx_dam.tx_dammam_mamuuid">UID</label>

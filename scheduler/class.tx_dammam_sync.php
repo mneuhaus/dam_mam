@@ -3,9 +3,8 @@
 /**
  *
  */
-class tx_dammam_sync extends tx_scheduler_Task
-{
-	protected $moveProcessedFiles = True;
+class tx_dammam_sync extends tx_scheduler_Task {
+	protected $moveProcessedFiles = TRUE;
 
 	/**
 	 * @var array
@@ -15,7 +14,7 @@ class tx_dammam_sync extends tx_scheduler_Task
 	/**
 	 * @var boolean
 	 */
-	protected $import_missing = false;
+	protected $import_missing = FALSE;
 
 	/**
 	 *
@@ -24,113 +23,112 @@ class tx_dammam_sync extends tx_scheduler_Task
 	protected $missing_files = array();
 
 	/**
+	 *
+	 * @var array
+	 */
+	protected $found_files = array();
+
+	/**
 	 * @var array
 	 */
 	protected $ignoredMimeTypes = array(
-		"application/octet-stream"
+		'application/octet-stream'
 	);
 
 	/**
 	 * @var array
 	 */
 	protected $stat = array(
-		"start" => 0,
-		"stop" => 0,
-		"files_inserted" => 0,
-		"files_updated" => 0,
-		"files_deleted" => 0,
-		"files_missing" => 0
+		'start' => 0,
+		'stop' => 0,
+		'files_inserted' => 0,
+		'files_updated' => 0,
+		'files_deleted' => 0,
+		'files_missing' => 0
 	);
 
-	public function execute()
-	{
+	public function execute() {
+		ob_start();
 		try {
-			$this->stat["start"] = function_exists("microtime") ? microtime(true) : time();
+			$this->stat['start'] = function_exists('microtime') ? microtime(TRUE) : time();
 
-			if ($this->loadConf() == false) return false;
+			if ($this->loadConf() == FALSE) {
+				return FALSE;
+			}
+			$GLOBALS['DebugLevel'] = $this->debugLevel;
+			$GLOBALS['TYPO3_DB']->debugOutput = 0;
 
 			$this->sanitize();
 
 			try {
 				$this->process();
 			} catch (Exception $e) {
-				$this->log("The import failed!", $e, 3);
-				return false;
+				$this->log('The import failed!', $e, 3);
+				return FALSE;
 			}
 
-			$this->checkUnresolvedRelations();
+			//$this->redoRelations();
 			$this->cleanUpAbandonedFiles($this->mediafolder);
 			$this->cleanUpAbandonedFolders($this->mediafolder);
 
-			$this->stat["stop"] = function_exists("microtime") ? microtime(true) : time();
+			$this->stat['stop'] = function_exists('microtime') ? microtime(TRUE) : time();
 
 			$s = $this->stat;
-			$this->log("Import statistics", array(
-				"Total time" => ($s["stop"] - $s["start"]),
-				"New Files" => $s["files_inserted"],
-				"Updated Files" => $s["files_updated"],
-				"Deleted Files" => $s["files_deleted"],
-				"Missing Files" => $s["files_missing"],
-				"Total Files processd" => ($s["files_inserted"] + $s["files_updated"] + $s["files_deleted"] + $s["files_missing"]),
-				"File per second" => ($s["files_inserted"] + $s["files_updated"] + $s["files_deleted"] + $s["files_missing"]) / ($s["stop"] - $s["start"]),
-				"Processed Files" => $this->processed
+			$this->log('Import statistics', array(
+				'Total time' => ($s['stop'] - $s['start']),
+				'New Files' => $s['files_inserted'],
+				'Updated Files' => $s['files_updated'],
+				'Deleted Files' => $s['files_deleted'],
+				'Missing Files' => $s['files_missing'],
+				'Total Files processd' => ($s['files_inserted'] + $s['files_updated'] + $s['files_deleted'] + $s['files_missing']),
+				'File per second' => ($s['files_inserted'] + $s['files_updated'] + $s['files_deleted'] + $s['files_missing']) / ($s['stop'] - $s['start']),
+				'Processed Files' => $this->processed
 			), 1);
 		} catch (Exception $e) {
-			$this->log("There was an unexpected Error: " . $e->getMessage(),
+			$this->log('There was an unexpected Error: ' . $e->getMessage(),
 				array(
-					"Exception" => $this->objectToArray($e)
+					'Exception' => $this->objectToArray($e)
 				), 3);
 		}
 
-		return true;
+		$output = ob_get_clean();
+		if (!empty($output)) {
+			$this->log('Unexpected output from Scheduler', array($output), 3);
+		}
+
+
+		return TRUE;
 	}
 
-	public function log($msg, $data = null, $severity = 0)
-	{
+	public function log($msg, $data = NULL, $severity = 0) {
 		if ($severity >= $this->debuglevel) {
 			$data = $this->objectToArray($data);
-			t3lib_div::devLog($msg, "dam_mam", $severity, $data);
-
-			$severities = array(
-				0 => E_USER_NOTICE,
-				1 => E_USER_NOTICE,
-				2 => E_WARNING,
-				3 => E_WARNING,
-				-1 => E_USER_NOTICE
-			);
-
-			$additional = "";
-			#$additional = "\n" . var_export($data, true);
-
-			$msg = $msg . $additional . "\n\n";
-			#error_log($msg, 3, $this->hotfolder . "logs/" . date("d.m.y") . ".log");
-			#trigger_error($msg, $severities[$severity]);
-
+			t3lib_div::devLog($msg, 'dam_mam', $severity, $data);
 			unset($data);
 		}
 	}
 
-	public function objectToArray($object)
-	{
-		if (is_object($object))
+	public function objectToArray($object) {
+		if (is_object($object)) {
 			$array = get_object_vars($object);
-		elseif (is_array($object))
+		} elseif (is_array($object)) {
 			$array = $object;
+		}
 
 		if (is_array($array)) {
 			foreach ($array as $key => $value) {
-				if (is_object($value))
+				if (is_object($value)) {
 					$array[$key] = $this->objectToArray($value);
+				}
 			}
 		}
 		return $array;
 	}
 
-	public function sanitize()
-	{
-		$this->hotfolder = realpath($this->hotfolder) . "/";
-		$this->mediafolder = realpath($this->mediafolder) . "/";
-		$this->trashfolder = realpath($this->mediafolder) . "/.trash/";
+	public function sanitize() {
+		$this->hotfolder = realpath($this->hotfolder) . '/';
+		$this->mediafolder = realpath($this->mediafolder) . '/';
+		$this->trashfolder = realpath($this->mediafolder) . '/.trash/';
 		$this->max = intval($this->max);
 		$this->media_pid = intval($this->media_pid);
 	}
@@ -139,72 +137,76 @@ class tx_dammam_sync extends tx_scheduler_Task
 		$files = scandir($this->hotfolder);
 		$counter = 0;
 		foreach ($files as $file) {
-			if (substr($file, 0, 1) == ".") continue;
-
-			if (stristr($file, "missing_")) {
-				$this->rename($file, $this->hotfolder . "/missing/" . basename($file));
+			if (substr($file, 0, 1) == '.') {
+				continue;
 			}
-			if (!stristr($file, "export")) {
-				if (!is_dir($file) && basename($file) !== "conf.json") {
+
+			if (stristr($file, 'missing_')) {
+				$this->rename($file, $this->hotfolder . '/missing/' . basename($file));
+			}
+			if (!stristr($file, 'export')) {
+				if (!is_dir($file) && basename($file) !== 'conf.json') {
 					// $this->log("Skipping: " . basename($file), array(), 0);
 				}
 				continue;
 			}
 
-			if ($counter >= $this->max) return;
+			if ($counter >= $this->max) {
+				return;
+			}
 			$counter++;
 
 			$file = $this->hotfolder . $file;
 
 			if ($file) {
-				$this->log("Loading: " . basename($file), array(), 0);
+				$this->log('Loading: ' . basename($file), array(), 0);
 
 				$content = file_get_contents($file);
 				if (empty($content)) {
-					$this->log("The file " . basename($file) . " is empty.",
+					$this->log('The file ' . basename($file) . ' is empty.',
 						array(), 1);
-					$this->rename($file, dirname($file) . "/failed/" . basename($file));
+					$this->rename($file, dirname($file) . '/failed/' . basename($file));
 					continue;
 				}
 
 				$result = json_decode($content);
-				// convert complex xe+ notated numbers into strings, because json_decode can't handle them
+					// convert complex xe+ notated numbers into strings, because json_decode can't handle them
 				if (!is_a($result, 'stdClass')) {
 					$content = preg_replace('/"number": *(.+e\+.+?)(,*)/', '"number": "$1"$2', $content);
 					$result = json_decode($content);
 				}
 
-				if (!is_a($result, "stdClass")) {
-					 switch (json_last_error()) {
-				        case JSON_ERROR_NONE:
-				            $jsonError = ' - No errors';
-				        break;
-				        case JSON_ERROR_DEPTH:
-				            $jsonError = ' - Maximum stack depth exceeded';
-				        break;
-				        case JSON_ERROR_STATE_MISMATCH:
-				            $jsonError = ' - Underflow or the modes mismatch';
-				        break;
-				        case JSON_ERROR_CTRL_CHAR:
-				            $jsonError = ' - Unexpected control character found';
-				        break;
-				        case JSON_ERROR_SYNTAX:
-				            $jsonError = ' - Syntax error, malformed JSON';
-				        break;
-				        case JSON_ERROR_UTF8:
-				            $jsonError = ' - Malformed UTF-8 characters, possibly incorrectly encoded';
-				        break;
-				        default:
-				            $jsonError = ' - Unknown error';
-				        break;
-				    }
-					$this->log("The file " . basename($file) . " could not be loaded",
+				if (!is_a($result, 'stdClass')) {
+					switch (json_last_error()) {
+						case JSON_ERROR_NONE:
+							$jsonError = ' - No errors';
+							break;
+						case JSON_ERROR_DEPTH:
+							$jsonError = ' - Maximum stack depth exceeded';
+							break;
+						case JSON_ERROR_STATE_MISMATCH:
+							$jsonError = ' - Underflow or the modes mismatch';
+							break;
+						case JSON_ERROR_CTRL_CHAR:
+							$jsonError = ' - Unexpected control character found';
+							break;
+						case JSON_ERROR_SYNTAX:
+							$jsonError = ' - Syntax error, malformed JSON';
+							break;
+						case JSON_ERROR_UTF8:
+							$jsonError = ' - Malformed UTF-8 characters, possibly incorrectly encoded';
+							break;
+						default:
+							$jsonError = ' - Unknown error';
+							break;
+					}
+					$this->log('The file ' . basename($file) . ' could not be loaded',
 						array(
-							"Error:" => "The file '" . $file . "' can not be read or has syntax errors.",
-							"Hint:" => "Please check that the apache user has rights to the read the file and that it is a valid json document",
-							"JSON Error" => $jsonError
+							'Error:' => 'The file "' . $file . '" can not be read or has syntax errors.',
+							'Hint:' => 'Please check that the apache user has rights to the read the file and that it is a valid json document',
+							'JSON Error' => $jsonError
 						), 3);
-					$this->rename($file, dirname($file) . "/failed/" . basename($file));
+					$this->rename($file, dirname($file) . '/failed/' . basename($file));
 					continue;
 				}
 
@@ -212,18 +214,17 @@ class tx_dammam_sync extends tx_scheduler_Task
 				unset($result);
 
 
-				#if ($this->moveProcessedFiles) {
-				if ($this->rename($file, dirname($file) . "/processed/" . basename($file)))
-					$this->log(basename($file) . " was sucessfully imported and archived", array($file), 1);
-				else
-					$this->log(basename($file) . " was imported but could not be archived", array(
-						"source" => $file,
-						"target" => dirname($file) . "/processed/" . basename($file)
+				if ($this->rename($file, dirname($file) . '/processed/' . basename($file))) {
+					$this->log(basename($file) . ' was sucessfully imported and archived', array($file), 1);
+				} else {
+					$this->log(basename($file) . ' was imported but could not be archived', array(
+						'source' => $file,
+						'target' => dirname($file) . '/processed/' . basename($file)
 					), 3);
-				#}
+				}
 
 				if (count($this->missing_files) > 0) {
-					$missing_file = dirname($file) . "/missing/missing_" . time() . ".json";
+					$missing_file = dirname($file) . '/missing/missing_' . time() . '.json';
 					$data = new stdClass();
 					$data->count = count($this->missing_files);
 					$data->data = (object)$this->missing_files;
@@ -235,86 +236,85 @@ class tx_dammam_sync extends tx_scheduler_Task
 
 		$this->recheckMissingFiles();
 
-		$this->log("No files to import ", array("path" => $this->hotfolder, "files" => $files), 0);
-		return false;
+		$this->log('No files to import ', array('path' => $this->hotfolder, 'files' => $files), 0);
+		return FALSE;
 	}
 
-	public function takeAction($data)
-	{
+	public function takeAction($data) {
 		foreach ($data as $key => $item) {
 			try {
-				if (property_exists($item, "import_next_try") && $item->import_next_try > time()) {
+				if (property_exists($item, 'import_next_try') && $item->import_next_try > time()) {
 					$this->missing_files[] = $item;
 					continue;
 				}
-				#var_dump(property_exists($item, "import_next_try"));
-				#var_dump($item->import_next_try - time(), $item->import_next_try > time());
 
 				switch ($item->sync_action) {
 					case 'update':
-						if (in_array($item->data_mimetype, $this->ignoredMimeTypes)) continue;
+						if (in_array($item->data_mimetype, $this->ignoredMimeTypes)) {
+							continue;
+						}
 
 						$damObject = DamModel::getByMamUID($item->data_id);
-						$action = "Updated";
-						if ($damObject === false) {
+						$action = 'Updated';
+						if ($damObject === FALSE) {
 							$damObject = t3lib_div::makeInstance('DamModel');
-							$action = "Inserted";
+							$action = 'Inserted';
 						}
 						$damObject->pid = $this->media_pid;
 						$damObject->logging = $this;
-						$damObject->mediafolder = str_replace(PATH_site, "", $this->mediafolder);
+						$damObject->mediafolder = str_replace(PATH_site, '', $this->mediafolder);
 						$damObject->import($item);
 
-						#					if(!file_exists($damObject->file_name))
-						#						$damObject->file_name = pathinfo($damObject->file_name, PATHINFO_FILENAME) . ".jpg";
-						#$damObject->deleted = 0;
 						$file = (PATH_site . $damObject->file_path . $damObject->file_name);
 
-						// Check if the File has a wrong filename encoding
+							// Check if the File has a wrong filename encoding
 						if (!file_exists($file) && file_exists(utf8_decode($file))) {
 							rename(utf8_decode($file), $file);
 						}
 
 						if (!file_exists($file)) {
 							$damObject->file_path = $file;
-							$this->stat["files_missing"]++;
+							$this->stat['files_missing']++;
 
-							if (!property_exists($item, "import_date"))
+							if (!property_exists($item, 'import_date')) {
 								$item->import_date = time();
-
-							// The older the Import gets the more unlikely it is that it will come back
-							// So the interval to check this file will be doubled on each try
-							// 1min -> 2min -> 4min -> 8min -> 16min ...
-							// if (!property_exists($item, "import_next_try"))
-							// 	$time = (60 * 1);
-							// else
-							// 	$time = (($item->import_next_try - $item->import_date) * 2);
+							}
+								// The older the Import gets the more unlikely it is that it will come back
+								// So the interval to check this file will be doubled on each try
+								// 1min -> 2min -> 4min -> 8min -> 16min ...
+								// if (!property_exists($item, "import_next_try"))
+								// 	$time = (60 * 1);
+								// else
+								// 	$time = (($item->import_next_try - $item->import_date) * 2);
 
 							$item->import_next_try = time() + (60 * 5);
 
-							$this->log("File does not exist: " . $item->data_name . " | Rechecking in: 5 min", array(
-								"file" => $file,
-								"damObject" => $damObject
+							$this->log('File does not exist: ' . $item->data_name . ' | Rechecking in: 5 min', array(
+								'file' => $file,
+								'damObject' => $damObject
 							), 3);
 
 							$this->missing_files[] = $item;
 						} else {
-							$damObject->save();
-							$this->log($action . ': ' . $item->data_name . ' into [pid:' . $damObject->pid . ']', $damObject);
+							$damObject->save(TRUE, TRUE);
+							$this->log($action . ': ' . $item->data_name . ' into [pid:' . $damObject->pid . ']', $damObject, 1);
 							$this->stat['files_' . strtolower($action)]++;
+							$this->found_files[] = $item;
 						}
 						unset($damObject);
 						break;
 
 					case 'delete':
 						$object = DamModel::getByMamUID($item->data_id);
+						$object->logging = $this;
 						if (is_object($object) && method_exists($object, 'save')) {
-							$this->log('Deleting: ' . $item->data_name, $object);
 							if (strlen($object->tx_dammam_mamuuid) > 0) {
 								$GLOBALS['TYPO3_DB']->exec_DELETEquery('tx_dammam_unresolved_relations', 'uuid_local="' . $object->tx_dammam_mamuuid . '"');
 							}
 							$object->deleted = 1;
-							$object->save();
+							$object->save(TRUE, TRUE);
+							$GLOBALS['TYPO3_DB']->exec_UPDATEquery('tx_dam', 'tx_dammam_mamuuid="' . $item->data_id . '"', array('deleted' => '1'));
+							$this->log('Deleting: ' . $item->data_name, $object, 1);
 						} else {
 							$this->log('The Asset you\'re trying to delete doesn\'t exist: ' . $item->data_name);
 						}
@@ -386,12 +386,18 @@ class tx_dammam_sync extends tx_scheduler_Task
 				$this->takeAction($result->data);
 				unset($result);
 
-				if ($this->rename($file, dirname($file) . '/../processed/' . basename($file))) {
-					$this->log(basename($file) . ' was sucessfully imported and archived...', array($file, $this->missing), 1);
-				} else {
-					$this->log(basename($file) . ' was imported but could not be archived', array(
-						'source' => $file,
-						'target' => dirname($file) . '/../processed/' . basename($file)
+				unlink($file);
+
+				if (count($this->found_files) > 0) {
+					$found_file = dirname($file) . '/../processed/' . basename($file);
+					$data = new stdClass();
+					$data->count = count($this->found_files);
+					$data->data = (object)$this->found_files;
+					file_put_contents($found_file, json_encode($data));
+
+					$this->log('Found some missing files', array(
+						'missing_file' => $found_file,
+						'still missing:' => $this->found_files
 					), 1);
 				}
 
@@ -399,12 +405,24 @@ class tx_dammam_sync extends tx_scheduler_Task
 					$missing_file = dirname($file) . '/missing_' . time() . '.json';
 					$data = new stdClass();
 					$data->count = count($this->missing_files);
-					$data->data = (object)$this->missing_files;
+
+					$uniqueFiles = array();
+					foreach ($this->missing_files as $file) {
+						$date = new DateTime($item->data_modification_date);
+						$file->modification_timestamp = $date->getTimestamp();
+						if (!isset($uniqueFiles[$file->data_id])) {
+							$uniqueFiles[$file->data_id] = $file;
+						} elseif ($date->getTimestamp() > $uniqueFiles[$file->data_id]->modification_timestamp) {
+							$uniqueFiles[$file->data_id] = $file;
+						}
+					}
+
+					$data->data = (object) $uniqueFiles;
 					file_put_contents($missing_file, json_encode($data));
 
 					$this->log('Not all missing files could be found', array(
 						'missing_file' => $missing_file,
-						'still missing:' => $this->missing_files
+						'still missing:' => $uniqueFiles
 					), 1);
 				}
 			}
@@ -412,32 +430,31 @@ class tx_dammam_sync extends tx_scheduler_Task
 		}
 	}
 
-	public function loadConf()
-	{
-		$confFile = $this->hotfolder . "/conf.json";
+	public function loadConf() {
+		$confFile = $this->hotfolder . '/conf.json';
 		if (!file_exists($confFile)) {
-			$this->log("The Synchronisation config file does not exist.",
+			$this->log('The Synchronisation config file does not exist.',
 				array(
-					"Error:" => "The file '" . $confFile . "' does not exist.",
-					"Hint:" => "Please make sure that you have set up the right hotfolder in the Scheduler."
+					'Error:' => 'The file "' . $confFile . '" does not exist.',
+					'Hint:' => 'Please make sure that you have set up the right hotfolder in the Scheduler.'
 				), 3);
-			return false;
+			return FALSE;
 		}
 
-		$GLOBALS["DAM_MAM"]["conf"] = json_decode(file_get_contents($confFile));
-		if (!is_a($GLOBALS["DAM_MAM"]["conf"], "stdClass")) {
-			$this->log("The Synchronisation config could not be loaded.",
+		$GLOBALS['DAM_MAM']['conf'] = json_decode(file_get_contents($confFile));
+		if (!is_a($GLOBALS['DAM_MAM']['conf'], 'stdClass')) {
+			$this->log('The Synchronisation config could not be loaded.',
 				array(
-					"Error:" => "The file '" . $confFile . "' can not be read or has syntax errors.",
-					"Hint:" => "Please check that the apache user has rights to the read the file and that it is a valid json document"
+					'Error:' => 'The file "' . $confFile . '" can not be read or has syntax errors.',
+					'Hint:' => 'Please check that the apache user has rights to the read the file and that it is a valid json document'
 				), 3);
-			return false;
+			return FALSE;
 		}
-		return true;
+		return TRUE;
 	}
 
 	public function rename($from, $to) {
-		$this->log('Moving File:' . basename($from),
+		$this->log('Moving File: ' . basename($from),
 			array(
 				'From:' => $from,
 				'To:' => $to
@@ -456,61 +473,6 @@ class tx_dammam_sync extends tx_scheduler_Task
 		return 0;
 	}
 
-	public function checkUnresolvedRelations() {
-		$rows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows("*", "tx_dammam_unresolved_relations", "1=1");
-		$this->log("Updating relations", array(	"relations" => $rows     ), 0);
-		foreach ($rows as $row) {
-			if (empty($row["uuid_foreign"])) continue;
-
-			if (stristr($row["uuid_foreign"], "data_")) {
-				$foreignObject = DamModel::getByMamUID($row["uuid_foreign"]);
-				$localObject = DamModel::getByMamUID($row["uuid_local"]);
-				if (!is_object($localObject)) continue;
-
-				if (is_object($foreignObject) && intval($foreignObject->uid) > 0) {
-					$localObject->logging = $this;
-					$localObject->addRelatedFile($foreignObject->uid);
-					$localObject->save();
-					#$GLOBALS['TYPO3_DB']->exec_DELETEquery('tx_dammam_unresolved_relations', 'uuid_local="'.$row["uuid_local"].'" AND uuid_foreign="'.$row["uuid_foreign"].'"' );
-					#$this->log("Resolved relation", array(
-					#	"row" => $row,
-					#	"foreignObject" => $foreignObject,
-					#	'localObject' => $localObject
-					#), 0);
-				} else {
-					#$this->log("Couldn't resolve relation", array(
-					#	"row" => $row,
-					#	"foreignObject" => $foreignObject,
-					#	'localObject' => $localObject
-					#), 0);
-				}
-			} else {
-				$localObject = DamModel::getByMamUID($row["uuid_local"]);
-
-				if (is_object($localObject)) {
-					$groupRows = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows("*", "tx_dammam_unresolved_relations", "uuid_foreign='" . $row["uuid_foreign"] . "'");
-
-					#$this->log("Resolving group relations", array(
-					#	"rows" => $groupRows
-					#), 0);
-					foreach ($groupRows as $groupRow) {
-						$foreignObject = DamModel::getByMamUID($groupRow["uuid_local"]);
-						if (is_object($foreignObject) && intval($foreignObject->uid) > 0 && $foreignObject->uid !== $localObject->uid) {
-							$localObject->logging = $this;
-							$localObject->addRelatedFile($foreignObject->uid);
-							$localObject->save();
-							#$this->log("Resolved group relation", array(
-							#	"rows" => $groupRows,
-							#	"foreignObject" => $foreignObject,
-							#	'localObject' => $localObject
-							#), 0);
-						}
-					}
-				}
-			}
-		}
-	}
-
 	protected $assetIndex = array();
 	public function cleanUpAbandonedFiles($path) {
 		if (empty($this->assetIndex)) {
@@ -520,15 +482,14 @@ class tx_dammam_sync extends tx_scheduler_Task
 				if (!isset($this->assetIndex[$file])) {
 					$this->assetIndex[$file] = $row;
 				} elseif ($this->assetIndex[$file]['tstamp'] < $row['tstamp']) {
-					// $this->log('Newer Entry' . $row['file_name'], array(
-					// 	date('d.m.y H:i:s', $this->assetIndex[$file]['tstamp']) . '<' . date('m.d.y H:i:s', $row['tstamp']),
-					// 	$this->assetIndex[$file]['tx_dammam_mamuuid'] . ' == ' . $row['tx_dammam_mamuuid'],
-					// 	$this->assetIndex[$file]['deleted'] . ' == ' . $row['deleted'],
-					// ));
+						// $this->log('Newer Entry' . $row['file_name'], array(
+						// 	date('d.m.y H:i:s', $this->assetIndex[$file]['tstamp']) . '<' . date('m.d.y H:i:s', $row['tstamp']),
+						// 	$this->assetIndex[$file]['tx_dammam_mamuuid'] . ' == ' . $row['tx_dammam_mamuuid'],
+						// 	$this->assetIndex[$file]['deleted'] . ' == ' . $row['deleted'],
+						// ));
 					$this->assetIndex[$file] = $row;
 				}
 			}
-			//$this->log('assetIndex', $this->assetIndex);
 		}
 
 		$subPaths = scandir($path);
@@ -542,12 +503,12 @@ class tx_dammam_sync extends tx_scheduler_Task
 			} else {
 				if (!isset($this->assetIndex[$subPath]) || $this->assetIndex[$subPath]['deleted']) {
 					$lastModification = filemtime($subPath);
-					if ($lastModification < (time() - (60 * 30))) {
+					if ($lastModification < (time() - (60 * 60 * 12))) {
 						$this->log('Deleting abandoned File: ' . $name, array(
 							'Path' => $subPath,
 							'Last modification' => date('d.m.y H:i:s', filemtime($subPath)),
 							'Asset' => isset($this->assetIndex[$subPath]) ? $this->assetIndex[$subPath] : array()
-						));
+						), 1);
 						if (is_file($subPath) && !is_dir($subPath)) {
 							unlink($subPath);
 						}
@@ -583,17 +544,40 @@ class tx_dammam_sync extends tx_scheduler_Task
 					'Path' => $path,
 					'Last modification' => date('H:i:s d.m.Y', $stat['mtime']),
 					'Files' => $subPaths
-				));
+				), 1);
 				rmdir($path);
 			} else {
 				$this->log('Found empty Folder which has been modified in the last 30 min: ' . basename($path), array(
 					'Path' => $path,
 					'Last modification' => date('H:i:s d.m.Y', $stat['mtime'])
-				));
+				), 1);
 			}
 		}
 
 		return $containsFiles;
+	}
+
+	public function redoRelations() {
+		$relations = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_dammam_unresolved_relations', '1=1');
+		foreach ($relations as $relation) {
+			if (!stristr($relation['uuid_foreign'], 'data_')) {
+				$GLOBALS['TYPO3_DB']->exec_DELETEquery('tx_dammam_unresolved_relations', 'uuid_local="' . $relation['uuid_local'] . '" AND crdate = "' . $relation['crdate'] . '"');
+			}
+		}
+
+		$assets = $GLOBALS['TYPO3_DB']->exec_SELECTgetRows('*', 'tx_dam', 'deleted=0');
+		foreach ($assets as $asset) {
+			preg_match("/((?P<value20>\d{2}\.\d+\.[A-Za-z]{2}[_-])(.*)|(?P<value25>\d.+[_])(.*)(?=[_-][A-Z]{2}[\d\._])(.*))(?P<value99>.*$)/", $asset['file_name'], $matches);
+			if (isset($matches['value20']) || isset($matches['value25'])) {
+				$group = strlen($matches['value20']) > 0 ? $matches['value20'] : $matches['value25'];
+				$values = array(
+					'crdate' => time(),
+					'uuid_local' => $asset['tx_dammam_mamuuid'],
+					'uuid_foreign' => $group
+				);
+				$res = $GLOBALS['TYPO3_DB']->exec_INSERTquery('tx_dammam_unresolved_relations', $values);
+			}
+		}
 	}
 }
 

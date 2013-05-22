@@ -6,6 +6,7 @@ return array(
 	'tx_dammam_garbage_collector_additionalfieldprovider' => t3lib_extMgm::extPath('dam_mam', 'scheduler/class.tx_dammam_garbage_collector_additionalfieldprovider.php'),
 	'tx_dammam_usage_exporter' => t3lib_extMgm::extPath('dam_mam', 'scheduler/class.tx_dammam_usage_exporter.php'),
 	'tx_dammam_usage_exporter_additionalfieldprovider' => t3lib_extMgm::extPath('dam_mam', 'scheduler/class.tx_dammam_usage_exporter_additionalfieldprovider.php'),
-	'tx_dam_dbTriggerMediaTypes' => t3lib_extMgm::extPath('dam', 'components/class.tx_dam_dbTriggerMediaTypes.php')
+	'tx_dam_dbTriggerMediaTypes' => t3lib_extMgm::extPath('dam', 'components/class.tx_dam_dbTriggerMediaTypes.php'),
+	'tx_dammam_relation_updater' => t3lib_extMgm::extPath('dam_mam', 'scheduler/class.tx_dammam_relation_updater.php')
 );
 ?>

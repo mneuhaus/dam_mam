@@ -98,7 +98,7 @@ class tx_dammam_sync_AdditionalFieldProvider implements tx_scheduler_AdditionalF
 	 */
 	public function getAdditionalFields(array &$taskInfo, $task, tx_scheduler_Module $parentObject) {
 		$additionalFields = array();
-		
+
 		foreach ($this->fields as $key => $conf) {
 			if (empty($taskInfo[$key])) {
 				if ($parentObject->CMD == 'add') {
@@ -115,7 +115,7 @@ class tx_dammam_sync_AdditionalFieldProvider implements tx_scheduler_AdditionalF
 				case 'blank':
 					$fieldCode = '';
 					break;
-				
+
 				case 'select':
 					$fieldCode = '<select name="' . $name . '" id="' . $fieldID . '" style="' . $conf["style"] . '">';
 					foreach ($conf["values"] as $value => $label) {
@@ -124,7 +124,7 @@ class tx_dammam_sync_AdditionalFieldProvider implements tx_scheduler_AdditionalF
 					}
 					$fieldCode.= '</select>';
 					break;
-				
+
 				case 'text':
 				default:
 					$fieldCode = '<input type="text" name="' . $name . '" id="' . $fieldID . '" value="' . $taskInfo[$key] . '" style="'.$conf["style"].'"/>';
@@ -137,7 +137,7 @@ class tx_dammam_sync_AdditionalFieldProvider implements tx_scheduler_AdditionalF
 				'cshLabel' => $fieldID
 			);
 		}
-		
+
 		return $additionalFields;
 	}
 
@@ -151,28 +151,28 @@ class tx_dammam_sync_AdditionalFieldProvider implements tx_scheduler_AdditionalF
 	 * @return	boolean			True if validation was ok (or selected class is not relevant), false otherwise
 	 */
 	public function validateAdditionalFields(array &$submittedData, tx_scheduler_Module $parentObject) {
-		
+
 		foreach ($this->fields as $key => $conf) {
 			$value = $submittedData[$key];
 			$validator = "validate" . ucfirst($key);
 			if(method_exists($this, $validator) && call_user_func(array($this, $validator), $value, $parentObject) == false)
 				return false;
 		}
-		
+
 		return true;
-		
+
 	}
 
 	public function validateHotfolder($value, $parentObject){
 		return $this->checkDir($value, "Hotfolder", $parentObject);
 	}
-	
+
 	public function validateMediafolder($value, $parentObject){
 		return $this->checkDir($value, "Media Folder", $parentObject);
 	}
 
 	public function checkDir($path, $name, $parentObject){
-		
+
 		// If value is not valid, report error with a flash message.
 		if (empty($path)) {
 			$parentObject->addMessage(
@@ -193,7 +193,7 @@ class tx_dammam_sync_AdditionalFieldProvider implements tx_scheduler_AdditionalF
 			);
 			return false;
 		}
-		
+
  		return true;
 	}
 

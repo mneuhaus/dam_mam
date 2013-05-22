@@ -45,6 +45,12 @@ $TYPO3_CONF_VARS['SC_OPTIONS']['scheduler']['tasks']['tx_dammam_usage_exporter']
 	'additionalFields' => 'tx_dammam_usage_exporter_additionalfieldprovider'
 );
 
+$TYPO3_CONF_VARS['SC_OPTIONS']['scheduler']['tasks']['tx_dammam_relation_updater'] = array(
+	'extension' => $_EXTKEY,
+	'title' => 'MAM CMS Relation Updater',
+	'description' => ''
+);
+
 include_once(t3lib_extMgm::extPath('dam_mam', 'models/class.BaseModel.php'));
 include_once(t3lib_extMgm::extPath('dam_mam', 'models/class.DamModel.php'));
 include_once(t3lib_extMgm::extPath('dam_mam', 'models/class.DamCategoryModel.php'));
