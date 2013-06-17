@@ -4,7 +4,7 @@ require_once(t3lib_extMgm::extPath("dam") . 'lib/class.tx_dam_tcefunc.php');
 
 class user_dammam_related_files extends tx_dam_tceFunc{
 	var $cObj;
- 
+
 	public function user_related_files($PA, $fobj) {
 		$result = '';
 		if(strlen($PA['itemFormElValue']) > 0){
@@ -29,10 +29,19 @@ class user_dammam_related_files extends tx_dam_tceFunc{
 				$result.= '<td>' . $row["title"] . '</td>';
 
 				$_extConfig = unserialize($GLOBALS['TYPO3_CONF_VARS']['EXT']['extConf']["dam_mam"]);
-				$result.= '<td>' . (isset($languages[$row["tx_dammam_language"]]) ? $languages[$row["tx_dammam_language"]]["title"] : $GLOBALS['LANG']->sL($_extConfig['default_language_label'])) . '</td>';
+
+				$rowLanguages = array();
+				foreach (explode(',', $row['tx_dammam_language']) as $sys_language_uid ) {
+					if (isset($languages[$sys_language_uid])) {
+						$rowLanguages[] = $languages[$sys_language_uid]['title'];
+					} else {
+						$rowLanguages[] = $GLOBALS['LANG']->sL($_extConfig['default_language_label']);
+					}
+				}
+				$result .= '<td>' . implode(', ', $rowLanguages) . '</td>';
 
 				$path = PATH_site . $row["file_path"] . $row['file_name'];
-				$url = 'http://crossmedia.wanzl.he-hosting.de/typo3/show_item.php?table='.($path).'&uid=';
+				$url = $_SERVER['SCRIPT_NAME'] . '?table='.($path).'&uid=';
 				$result.= '<td><a href="' . $url . '"><img title="Display information" src="../../../../typo3/sysext/t3skin/icons/gfx/zoom2.gif" width="16" height="16" alt=""></a></td>';
 
 				$result.= '</tr>';
